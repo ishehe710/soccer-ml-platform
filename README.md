@@ -95,6 +95,6 @@ Currently in development...
 
 ## Links
 
-- Link to project spec: [Project Spec]("./docs/project_specification.md")
+- Link to project spec: [Project Spec](./docs/project_specification.md)
 
 ---
