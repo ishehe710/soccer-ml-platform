@@ -1,0 +1,6 @@
+
+# for table creation of the website
+docker compose exec -T db psql -U postgres -d soccer_platform_db < database/schema.sql
+
+# enter the soccer platform database
+docker compose exec db psql -U postgres -d soccer_platform_db

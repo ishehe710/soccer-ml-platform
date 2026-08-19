@@ -167,5 +167,7 @@ Below I list the future features to be added to the website:
 - Historical season comparisons
 - Head-to-head analysis
 - Have a user system, where they can tailor stats, teams, and players to follow.
+- Coach information
+- National team coverage
 
 ---
