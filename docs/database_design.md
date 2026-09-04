@@ -41,6 +41,7 @@ erDiagram
 |---|---|---|
 | id | INTEGER | PK |
 | api_id | INTEGER | UNIQUE, NOT NULL |
+| comp_id | INTGER | FK, NOT NULL | 
 | start_date | DATE | NOT NULL |
 | end_date | DATE | NOT NULL |
 | is_current | BOOL | NOT NULL |

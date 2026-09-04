@@ -1,6 +1,7 @@
 import os
 import requests
 from dotenv import load_dotenv
+from datetime import datetime
 
 # Load enviroment variables
 load_dotenv()
@@ -26,6 +27,7 @@ def print_fetch_data(path, api_url,data_info):
 
 '''
     Extracting competition info from BZZoiro Sports API
+'''
 '''
 path = f"leagues"
 
@@ -53,4 +55,33 @@ print("champs_data:", champs_data)
 
 ##      TRANSFORM
 # make python schema of the postgres database
+'''
 
+'''
+    Extracting seasons info from BZZoiro Sports API
+'''
+
+# premier league
+
+path = f"leagues/{prem}/seasons/"
+
+##      EXTRACTION
+# fetch
+response = print_fetch_data(path, API_URL, "printing premier league seasons") # competition info
+
+
+# finding appropriate leagues: Premier and Champions League
+data = response['seasons']
+
+current_season_year = datetime.now().year
+season_years = [current_season_year - i for i in range(6)]
+
+prem_seasons_data = []
+
+for season in data:
+    for start_year in season_years:
+        if season['year'] == start_year:
+            prem_seasons_data.append(season)
+            
+print("prem_seasons_data:", prem_seasons_data)
+print(len(prem_seasons_data))

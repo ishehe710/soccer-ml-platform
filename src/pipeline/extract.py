@@ -13,6 +13,7 @@ Pipeline stage:
     Bzzoiro Sports Data API -> [EXTRACT] -> Raw API data
 """
 import requests
+from datetime import datetime
 
 # in-project imports
 from src.config.settings import settings
@@ -37,7 +38,16 @@ def fetch_api_data(path):
     return r.json()
 
 
+'''
+        COMPETITIONS
+'''
 def extract_competitions():
+    """Calls the Sports Bzzoiro Data API to get information for competitions for the website.
+
+    Returns:
+        list: A list of dicts that contain league data.
+            [{}, ..., {}]
+    """
     
     path = f"/api/v2/leagues"
     
@@ -52,14 +62,46 @@ def extract_competitions():
     
     comps_data = []
     
-    for comp_id in COMPETITIONS: # desired competitions
+    for comp_id in COMPETITIONS:            # desired competitions
         for comp in raw_comps_data:
 
             if comp['id'] == comp_id:
                 comps_data.append(comp)
                 
     return comps_data
+
+
+'''
+        SEASONS
+'''
+def extract_seasons():
+    """Calls the Sports Bzzoiro Data API to get information for current and historic season ata for the website.
+
+    Returns:
+        dict: Where the key is an int for competition API id and the value is the latest 6 seasons data for all competitions.
+            {int: list}
+    """
     
+    data = {}
+    for competition_id in COMPETITIONS:
+        
+        path = f"/api/v2/leagues/{competition_id}/seasons/"
+
+        response = fetch_api_data(path) # seasons info
+
+        # Finding appropriate seasons
+        seasons_data = response['seasons']
+
+        current_season_year = datetime.now().year
+        season_years = [current_season_year - i for i in range(settings.seasons_to_load)]
+
+        comp_seasons_data = []
+
+        for season in seasons_data:
+            for start_year in season_years:
+                if season['year'] == start_year:
+                    comp_seasons_data.append(season)
+                
+        data[competition_id] = comp_seasons_data
     
-    
-    
+    return data

@@ -14,6 +14,7 @@ CREATE TABLE competitions (
 CREATE TABLE seasons (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     api_id INTEGER UNIQUE NOT NULL,
+    comp_id INTEGER REFERENCES competitions(id),
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     is_current BOOL NOT NULL,

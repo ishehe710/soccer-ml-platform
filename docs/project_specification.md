@@ -29,7 +29,17 @@ The goals of the project is as follows:
 
 ---
 
-## 4. MVP
+## 4. Project Scope
+
+### Data Requirements
+
+This section describes the necessary data required by the application.
+
+* **Competitions:** For the initial version of the project, the application will cover the Premier League and UEFA Champions League.
+* **Seasons:** The application will use data from the current season and the five previous seasons for each competition.
+
+
+## 5. MVP
 
 There are three main selling points of the website: **Soccer Data**, **Prediction Models** **Vizualizations**.
 - **Soccer Data**: The website will feature data from matches of the current season, teams, players, leagues, and end-of-game statistics. 
@@ -53,7 +63,7 @@ There are three main selling points of the website: **Soccer Data**, **Predictio
 
 ---
 
-## 5. ML Objective
+## 6. ML Objective
 
 The machine learning focus of the project are the prediction models. The predictions wll be like this: 
     ```
@@ -70,7 +80,7 @@ The model will use only information available prior to the match when generating
 
 ---
 
-## 6. Technology Stack
+## 7. Technology Stack
 
 The following project will likely use the following stack:
 - Frotend: React
@@ -85,7 +95,7 @@ The following project will likely use the following stack:
 
 ---
 
-## 7. System Architecture
+## 8. System Architecture
 
 The sytem architecture is shown below:
     
@@ -133,13 +143,13 @@ The sytem architecture is shown below:
     ```
 ---
 
-## 8. Data Sources
+## 9. Data Sources
 
 Yet to be determined
 
 ---
 
-## 9. Milestones
+## 10. Milestones
 
 There are five milstones:
 - Milestone 1 (Data Engineering): This wil be fetch data from public APIs and storing that data neatly into a Postgres database. Where that data can then be used anywhere within the application. In addition, update the database with new data after future games have gone to a close.
@@ -154,7 +164,7 @@ There are five milstones:
 
 ---
 
-## 10. Future Features
+## 11. Future Features
 
 Below I list the future features to be added to the website:
 - Model performance

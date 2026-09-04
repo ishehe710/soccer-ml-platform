@@ -47,3 +47,22 @@ prem_data: {
 }
 
 champs_data: {'id': 7, 'name': 'Champions League', 'country': 'Europe', 'is_women': False, 'is_active': True, 'current_season': {'id': 1112, 'name': 'UEFA Champions League 26/27', 'year': 2026, 'start_date': '2026-07-01', 'end_date': '2027-06-30', 'is_current': True}}
+
+{
+    1: [
+        {
+            'id': 1058, 
+            'name': 'Premier League 26/27', 
+            'year': 2026, 
+            'start_date': '2026-07-01', 
+            'end_date': '2027-06-30', 
+            'is_current': True
+        }, 
+        {
+            'id': 337, 'name': 'Premier League 25/26', 'year': 2025, 'start_date': '2025-07-01', 'end_date': '2026-06-30', 'is_current': False}, 
+        {'id': 336, 'name': 'Premier League 24/25', 'year': 2024, 'start_date': '2024-07-01', 'end_date': '2025-06-30', 'is_current': False}, 
+        {'id': 335, 'name': 'Premier League 23/24', 'year': 2023, 'start_date': '2023-07-01', 'end_date': '2024-06-30', 'is_current': False}, 
+        {'id': 334, 'name': 'Premier League 22/23', 'year': 2022, 'start_date': '2022-07-01', 'end_date': '2023-06-30', 'is_current': False}, 
+        {'id': 333, 'name': 'Premier League 21/22', 'year': 2021, 'start_date': '2021-07-01', 'end_date': '2022-06-30', 'is_current': False}], 
+    7: [
+        {'id': 1112, 'name': 'UEFA Champions League 26/27', 'year': 2026, 'start_date': '2026-07-01', 'end_date': '2027-06-30', 'is_current': True}, {'id': 268, 'name': 'UEFA Champions League 25/26', 'year': 2025, 'start_date': '2025-07-01', 'end_date': '2026-06-30', 'is_current': False}, {'id': 267, 'name': 'UEFA Champions League 24/25', 'year': 2024, 'start_date': '2024-07-01', 'end_date': '2025-06-30', 'is_current': False}, {'id': 266, 'name': 'UEFA Champions League 23/24', 'year': 2023, 'start_date': '2023-07-01', 'end_date': '2024-06-30', 'is_current': False}, {'id': 265, 'name': 'UEFA Champions League 22/23', 'year': 2022, 'start_date': '2022-07-01', 'end_date': '2023-06-30', 'is_current': False}, {'id': 264, 'name': 'UEFA Champions League 21/22', 'year': 2021, 'start_date': '2021-07-01', 'end_date': '2022-06-30', 'is_current': False}]}
