@@ -64,3 +64,36 @@ def load_seasons(seasons):
     
     for season in seasons:
         load_season(season)
+        
+'''
+        TEAMS
+'''
+def load_team(team):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO teams 
+                    (api_id, short_name, team_name, country, logo_url, created_at)
+                VALUES
+                    (%s, %s, %s, %s, %s, NOW())
+                ON CONFLICT (api_id)
+                DO UPDATE SET
+                    short_name = EXCLUDED.short_name,     
+                    team_name = EXCLUDED.team_name,     
+                    country = EXCLUDED.country,     
+                    logo_url = EXCLUDED.logo_url     
+                """,
+                (
+                    team.api_id,
+                    team.short_name, 
+                    team.team_name,
+                    team.country,
+                    team.logo_url
+                )
+            )
+
+def load_teams(teams):
+    
+    for team in teams:
+        load_team(team)

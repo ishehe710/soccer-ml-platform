@@ -105,3 +105,29 @@ def extract_seasons():
         data[competition_id] = comp_seasons_data
     
     return data
+
+'''
+        TEAMS
+'''
+
+def extract_teams():
+    """Calls the Sports Bzzoiro Data API to get information for in competition teams data
+        per competition indicated
+
+    Returns:
+        list[dict]: A list of dicts that have team info.
+    """
+    
+    teams_data = []
+    for competition_id in COMPETITIONS:
+        
+        path = f"/api/v2/teams/?league_id={competition_id}&in_competition=true"
+        
+        response = fetch_api_data(path)
+        
+        raw_data = response['results']
+        
+        teams_data += raw_data
+        
+    return teams_data
+

@@ -61,6 +61,7 @@ print("champs_data:", champs_data)
     Extracting seasons info from BZZoiro Sports API
 '''
 
+'''
 # premier league
 
 path = f"leagues/{prem}/seasons/"
@@ -85,3 +86,15 @@ for season in data:
             
 print("prem_seasons_data:", prem_seasons_data)
 print(len(prem_seasons_data))
+'''
+
+'''
+    Extracting teams info from Sports Bzzoiro Data API
+'''
+
+path = f"teams/?league_id={prem}&in_competition=true"
+
+response = print_fetch_data(path, API_URL, "printing teams info")
+
+raw_teams_data = response['results']
+

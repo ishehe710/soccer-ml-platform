@@ -2,6 +2,7 @@
 # in-project imports
 from src.models.competition import Competition
 from src.models.season import Season
+from src.models.team import Team
 from src.config.models import IMG_API_URL
 
 '''
@@ -55,6 +56,26 @@ def transform_seasons(seasons):
         transformed_seasons += [transform_season(season, comp_id) for season in seasons_data]
     
     return transformed_seasons
+
+'''
+    TEAMS
+'''
+
+def transform_team(team):
     
+    id =  team["id"]
+    path = f"{IMG_API_URL}team/{id}"
+
+    return Team(
+        api_id=team["id"],
+        short_name=team["short_name"],
+        team_name=team["name"],
+        country=team["country"],
+        logo_url=path
+    )
         
+def transform_teams(teams):
     
+    transformed_teams = [transform_team(team) for team in teams]
+    
+    return transformed_teams
