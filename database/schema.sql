@@ -14,7 +14,7 @@ CREATE TABLE competitions (
 CREATE TABLE seasons (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     api_id INTEGER UNIQUE NOT NULL,
-    comp_id INTEGER REFERENCES competitions(id),
+    comp_id INTEGER REFERENCES competitions(api_id),
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     is_current BOOL NOT NULL,
@@ -23,8 +23,8 @@ CREATE TABLE seasons (
 
 CREATE TABLE standings (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    season_id INTEGER REFERENCES seasons(id),
-    team_id INTEGER REFERENCES teams(id),
+    season_id INTEGER REFERENCES seasons(api_id),
+    team_id INTEGER REFERENCES teams(api_id),
     UNIQUE (season_id, team_id),
     position INTEGER NOT NULL,
     games_played INTEGER NOT NULL,
@@ -51,9 +51,9 @@ CREATE TABLE teams (
 
 CREATE TABLE rosters (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    team_id INTEGER REFERENCES teams(id),
-    season_id INTEGER REFERENCES seasons(id),
-    player_id INTEGER REFERENCES players(id),
+    team_id INTEGER REFERENCES teams(api_id),
+    season_id INTEGER REFERENCES seasons(api_id),
+    player_id INTEGER REFERENCES players(api_id),
     UNIQUE (team_id, season_id, player_id),
     jersey_number INTEGER NOT NULL,
     position TEXT NOT NULL,
@@ -79,10 +79,10 @@ CREATE TABLE players (
 CREATE TABLE matches (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     api_id INTEGER UNIQUE NOT NULL,
-    comp_id INTEGER REFERENCES competitions(id),
-    season_id INTEGER REFERENCES seasons(id),
-    home_team_id INTEGER REFERENCES teams(id),
-    away_team_id INTEGER REFERENCES teams(id),
+    comp_id INTEGER REFERENCES competitions(api_id),
+    season_id INTEGER REFERENCES seasons(api_id),
+    home_team_id INTEGER REFERENCES teams(api_id),
+    away_team_id INTEGER REFERENCES teams(api_id),
     final_score TEXT,
     home_score INTEGER,
     away_score INTEGER,
@@ -93,8 +93,8 @@ CREATE TABLE matches (
 
 CREATE TABLE match_stats (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    match_id INTEGER REFERENCES matches(id),
-    team_id INTEGER REFERENCES teams(id),
+    match_id INTEGER UNIQUE REFERENCES matches(api_id),
+    team_id INTEGER REFERENCES teams(api_id),
     fouls INTEGER,
     passes INTEGER,
     tackles INTEGER,
@@ -110,7 +110,7 @@ CREATE TABLE match_stats (
     red_cards INTEGER,
     expected_goals DECIMAL,
     accurate_passes INTEGER,
-    ball_possesion INTEGER,
+    ball_possession INTEGER,
     goals_prevented DECIMAL,
     shots_on_target INTEGER,
     shots_off_target INTEGER,
@@ -124,10 +124,10 @@ CREATE TABLE match_stats (
 
 CREATE TABLE player_season_stats (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    player_id INTEGER REFERENCES players(id),
-    season_id INTEGER REFERENCES seasons(id),
-    comp_id INTEGER REFERENCES competitions(id),
-    team_id INTEGER REFERENCES teams(id),
+    player_id INTEGER REFERENCES players(api_id),
+    season_id INTEGER REFERENCES seasons(api_id),
+    comp_id INTEGER REFERENCES competitions(api_id),
+    team_id INTEGER REFERENCES teams(api_id),
     matches INTEGER NOT NULL,
     minutes INTEGER NOT NULL,
     goals INTEGER NOT NULL,

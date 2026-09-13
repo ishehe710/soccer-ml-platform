@@ -13,11 +13,33 @@ Pipeline stage:
     Bzzoiro Sports Data API -> [EXTRACT] -> Raw API data
 """
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from datetime import datetime
 
 # in-project imports
 from src.config.settings import settings
 from src.config.pipeline import COMPETITIONS
+from src.database.queries import get_seasons_api_ids, get_all_matches_finished_ids
+
+'''
+        ESTABLISH session
+'''
+
+session = requests.Session()
+
+retry_strategy = Retry(
+    total=3,
+    backoff_factor=1,
+    status_forcelist=[429, 500, 502, 503, 504],
+    allowed_methods=["GET"]
+)
+
+adapter = HTTPAdapter(max_retries=retry_strategy)
+
+session.mount("http://", adapter)
+session.mount("https://", adapter)
+
 
 # base fetch
 def fetch_api_data(path):
@@ -33,7 +55,14 @@ def fetch_api_data(path):
     
     # fetch request for data 
     headers = {"Authorization": f"Token {settings.sports_bzzoiro_api_key}"}
-    r = requests.get(settings.sports_bzzoiro_api_url + path, headers=headers)
+    r = session.get(settings.sports_bzzoiro_api_url + path, headers=headers, timeout=30)
+    
+    
+    print("URL:", r.url)
+    print("Status:", r.status_code)
+
+    r.raise_for_status()
+    
     
     return r.json()
 
@@ -55,7 +84,7 @@ def extract_competitions():
     
     response = fetch_api_data(path)
     
-    print("Fetch succesful!")
+    print("Fetching competitions was succesful!")
     
     # finding the appropriate leagues
     raw_comps_data = response['results']
@@ -68,6 +97,8 @@ def extract_competitions():
             if comp['id'] == comp_id:
                 comps_data.append(comp)
                 
+    print("Succesfully extracted competitions.")
+    
     return comps_data
 
 
@@ -87,7 +118,9 @@ def extract_seasons():
         
         path = f"/api/v2/leagues/{competition_id}/seasons/"
 
+        print("Fetching season data...")
         response = fetch_api_data(path) # seasons info
+        print("Fetching seasons was succesful.")
 
         # Finding appropriate seasons
         seasons_data = response['seasons']
@@ -104,6 +137,8 @@ def extract_seasons():
                 
         data[competition_id] = comp_seasons_data
     
+    print("Extracting seasons was successful.")
+    
     return data
 
 '''
@@ -119,6 +154,7 @@ def extract_teams():
     """
     
     teams_data = []
+    print("Fetching team data...")
     for competition_id in COMPETITIONS:
         
         path = f"/api/v2/teams/?league_id={competition_id}&in_competition=true"
@@ -128,6 +164,96 @@ def extract_teams():
         raw_data = response['results']
         
         teams_data += raw_data
-        
+    
+    print("Fetching team data was successful.")
+    print("Extracting team data succesfull.")
+    
     return teams_data
 
+def extract_a_team(team_id):
+    
+    path = f"/api/v2/teams/{team_id}"
+    
+    print(f"Fetching team with id = {team_id} info...")
+    response = fetch_api_data(path)
+    print(f"Fetched succesful for getting team data for id = {team_id}.")
+    print(f"Extracting team with id = {team_id} successful.")
+    
+    return response
+
+'''
+        MATCHES
+'''
+
+def extract_matches():
+    
+    # Getting seasons api ids according to Sports Bzzoiro Data API
+    seasons_api_ids = get_seasons_api_ids()
+    
+    all_matches = []
+    
+    print("Fetching match data from API...")
+    for season_id in seasons_api_ids:
+        
+        offset = 0
+        limit = 200
+                
+        while True:
+            
+            path = f"/api/v2/events/?limit={limit}&offset={offset}&season_id={season_id}" 
+            response = fetch_api_data(path)
+            
+            matches = response["results"]
+                        
+            # Exceeded total number of matches
+            if not matches:
+                break
+            
+            all_matches.extend(matches)
+    
+            # last batch of matches
+            if len(matches) < limit:
+                break
+            
+            offset += limit
+    
+    print("Fetch successful for getting match data from API.")
+    print("Extracting match data from API.")
+    
+    return all_matches
+
+'''
+        MATCH_STATS
+'''
+
+def extract_match_stats():
+    
+    match_ids = get_all_matches_finished_ids()
+    
+    all_matches_stats = []
+    
+    print(f"Fetching match stats from API...")
+
+    for i, match_id in enumerate(match_ids):
+        print(f"Fetching match stats {i+1}/{len(match_ids)}")
+        
+        path = f"/api/v2/events/{match_id}/stats"
+        
+        response = fetch_api_data(path) # singular match stats
+        
+        match_stats = response
+        
+        all_matches_stats.append(match_stats)
+            
+    print("Fetching match stats was succesful.")
+    print("Extraction of match stats was successful.")
+    
+    return all_matches_stats
+
+'''
+        PLAYERS + ROSTERS
+'''
+
+def extract_rosters_and_players():
+    
+    roster_path = f"/api/v2/teams/{id}/squad/ "

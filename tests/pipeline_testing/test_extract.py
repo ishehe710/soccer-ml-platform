@@ -2,10 +2,13 @@
 from src.pipeline.extract import (
     extract_competitions, 
     extract_seasons,
-    extract_teams
+    extract_teams,
+    extract_matches,
+    extract_a_team,
+    extract_match_stats
     )
 
-data = extract_teams()
+data = extract_match_stats()
 
-print("Extracting teams data")
-print(data)
+print("Extracting data")
+print("data", data)

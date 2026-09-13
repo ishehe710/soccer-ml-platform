@@ -3,10 +3,11 @@ from tests.pipeline_testing.test_extract import data
 from src.pipeline.transform import (
     transform_competitions, 
     transform_seasons,
-    transform_teams
+    transform_teams,
+    transform_matches
     )
 
-transformed_data = transform_teams(data)
+transformed_data = transform_matches(data)
 
 print("Transformed data:")
 print(transformed_data)

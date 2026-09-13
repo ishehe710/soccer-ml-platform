@@ -92,9 +92,44 @@ print(len(prem_seasons_data))
     Extracting teams info from Sports Bzzoiro Data API
 '''
 
+'''
 path = f"teams/?league_id={prem}&in_competition=true"
 
 response = print_fetch_data(path, API_URL, "printing teams info")
 
 raw_teams_data = response['results']
+'''
 
+'''
+    Extracting match info from Sports Bzzoiro Data API
+'''
+
+'''
+prem_s_26_27 = 1058
+champs_s_26_27 = 1112
+offset = 200
+limit = 200
+prem = 1
+path = f"events/?season_id={prem_s_26_27}&offset={offset}&limit={limit}"
+
+response = print_fetch_data(path, API_URL, "printing champions league 26/27 fixtures")
+
+data = response["results"]
+
+'''
+
+
+'''
+    Extracting match stats
+'''
+'''
+psg_ars = 206718
+
+path = f'events/{psg_ars}/stats/?league_id={1}'
+
+print_fetch_data(path, API_URL, "printing psg vs arsenal match stats")
+'''
+
+'''
+    Extracting rosters
+'''
