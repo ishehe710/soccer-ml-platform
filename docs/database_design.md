@@ -92,7 +92,6 @@ NOTE: UNIQUE (season_id, team_id)
 |---|---|---|
 | id | INTEGER | PK |
 | team_id | INTEGER | FK, NOT NULL |
-| season_id | INTEGER | FK, NOT NULL |
 | player_id | INTEGER | FK, NOT NULL |
 | jersey_number | INTEGER | NOT NULL |
 | position | TEXT | NOT NULL |
@@ -111,12 +110,12 @@ NOTE: UNIQUE (team_id, season_id, player_id)
 | name | TEXT | NOT NULL|
 | short_name | TEXT | NOT NULL | 
 | preferred_position | TEXT | NOT NULL |
-| date_of_birth | DATE | NOT NULL |
-| preferred_foot | TEXT | NOT NULL |
-| nationality | TEXT | NOT NULL |
+| date_of_birth | DATE |  |
+| preferred_foot | TEXT |  |
+| nationality | TEXT |  |
 | market_value_euro | INTEGER |  |
 | wage_annual_euro | INTEGER | |
-| height_cm | INTEGER | NOT NULL |
+| height_cm | INTEGER |  |
 | player_img | TEXT | |
 | created_at | TIMESTAMPTZ | NOT NULL |
 

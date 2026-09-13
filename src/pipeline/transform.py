@@ -5,6 +5,8 @@ from src.models.season import Season
 from src.models.team import Team
 from src.models.match import Match
 from src.models.match_stats import MatchStats
+from src.models.roster import Roster
+from src.models.player import Player
 from src.config.models import IMG_API_URL
 from src.database.queries import get_team_ids_from_match
 
@@ -191,6 +193,59 @@ def transform_all_match_stats(all_match_stats):
     
     return transformed_match_stats
         
+'''
+        ROSTERS
+'''
+
+def transform_roster(roster):
     
+    team_id = roster["team_id"]
+    players = roster["players"]
     
+    transformed_roster = []
     
+    for player in players:
+        
+        transformed_roster.append(Roster(
+            team_id=team_id,
+            player_id=player["id"],
+            jersey_number=player["jersey_number"],
+            position=player["position"]
+        ))
+    
+    return transformed_roster
+
+def transform_rosters(rosters):
+    
+    transformed_rosters = [ transform_roster(roster) for roster in rosters]
+    
+    return transformed_rosters
+
+'''
+        PLAYERS
+'''
+
+def transform_player(player_data):
+    
+    id = player_data["id"]
+    img_path = f"{IMG_API_URL}/player/{id}"
+    
+    return Player(
+        api_id=id,
+        name=player_data["name"],
+        short_name=player_data["short_name"],
+        preferred_position=player_data["position"],
+        date_of_birth=player_data["date_of_birth"],
+        preferred_foot=player_data["preferred_foot"],
+        nationality=player_data["nationality"],
+        market_value_euro=player_data["market_value_eur"],
+        wage_annual_euro=player_data["wage_eur_annual"],
+        height_cm=player_data["height_cm"],
+        player_img=img_path
+    )
+    
+def transform_players(players):
+    
+    transformed_players = [ transform_player(player) for player in players]
+    
+    return transformed_players

@@ -92,4 +92,3 @@ def get_team_ids_from_match(match_id):
             away_team = data[0][1]
             return (home_team, away_team)
             
-print(get_all_team_ids())

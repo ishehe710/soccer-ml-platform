@@ -251,3 +251,91 @@ def load_all_match_stats(all_match_stats):
     for match_stats in all_match_stats:
         load_a_match_stats(match_stats)
 
+'''
+        ROSTERS
+'''
+
+def load_roster(roster):
+    
+    for roster_player in roster:
+    
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                
+                cur.execute(
+                    """
+                    INSERT INTO rosters
+                        (team_id, player_id, jersey_number, position, created_at)
+                    VALUES 
+                        (%s, %s, %s, %s, NOW())
+                    ON CONFLICT (team_id)
+                    DO UPDATE SET
+                        player_id = EXCLUDED.player_id,
+                        jersey_number = EXCLUDED.jersey_number,
+                        position = EXCLUDED.position
+                    """,
+                        (
+                            roster_player.team_id,
+                            roster_player.player_id, 
+                            roster_player.jersey_number,
+                            roster_player.position
+                        )
+                    )
+
+                conn.commit()
+            
+def load_rosters(rosters):
+    
+    for roster in rosters:
+        load_roster(roster)
+
+'''
+        PLAYERS
+'''
+
+def load_player(player):
+    
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            
+            cur.execute(
+                """
+                INSERT INTO players 
+                    (api_id, name, short_name, preferred_position, date_of_birth, preferred_foot, nationality, market_value_euro, wage_annual_euro, height_cm, player_img, created_at)
+                VALUES
+                    (    %s,   %s,         %s,                 %s,            %s,             %s,          %s,                 %s,              %s,        %s,         %s,      NOW())  
+                ON CONFLICT (api_id)
+                DO UPDATE SET
+                    name = EXCLUDED.name,
+                    short_name = EXCLUDED.short_name,
+                    preferred_position = EXCLUDED.preferred_position,
+                    date_of_birth = EXCLUDED.date_of_birth,
+                    preferred_foot = EXCLUDED.preferred_foot,
+                    nationality = EXCLUDED.nationality,
+                    market_value_euro = EXCLUDED.market_value_euro,
+                    wage_annual_euro = EXCLUDED.wage_annual_euro,
+                    height_cm = EXCLUDED.height_cm,
+                    player_img = EXCLUDED.player_img          
+                """,
+                (
+                    player.api_id,
+                    player.name,
+                    player.short_name, 
+                    player.preferred_position,
+                    player.date_of_birth,
+                    player.preferred_foot,
+                    player.nationality,
+                    player.market_value_euro,
+                    player.wage_annual_euro,
+                    player.height_cm,
+                    player.player_img
+                )
+            )
+            
+            conn.commit()
+            
+def load_players(players):
+
+    for player in players:
+        load_player(player)
+        

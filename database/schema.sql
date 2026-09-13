@@ -51,12 +51,11 @@ CREATE TABLE teams (
 
 CREATE TABLE rosters (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    team_id INTEGER REFERENCES teams(api_id),
-    season_id INTEGER REFERENCES seasons(api_id),
+    team_id INTEGER UNIQUE REFERENCES teams(api_id),
     player_id INTEGER REFERENCES players(api_id),
-    UNIQUE (team_id, season_id, player_id),
-    jersey_number INTEGER NOT NULL,
-    position TEXT NOT NULL,
+    UNIQUE (team_id, player_id),
+    jersey_number INTEGER,
+    position TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -64,14 +63,14 @@ CREATE TABLE players (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     api_id INTEGER UNIQUE NOT NULL,
     name TEXT NOT NULL,
-    short_name TEXT NOT NULL,
-    preferred_position TEXT NOT NULL,
-    date_of_birth DATE NOT NULL,
-    preferred_foot TEXT NOT NULL,
-    nationality TEXT NOT NULL,
+    short_name TEXT,
+    preferred_position TEXT,
+    date_of_birth DATE,
+    preferred_foot TEXT,
+    nationality TEXT,
     market_value_euro INTEGER,
     wage_annual_euro INTEGER,
-    height_cm INTEGER NOT NULL,
+    height_cm INTEGER,
     player_img TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

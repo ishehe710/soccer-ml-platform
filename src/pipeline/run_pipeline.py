@@ -5,27 +5,31 @@ from src.pipeline.extract import (
     extract_seasons,
     extract_teams,
     extract_matches,
-    extract_match_stats
+    extract_match_stats,
+    extract_rosters_and_players
 )
 from src.pipeline.transform import (
     transform_competitions, 
     transform_seasons,
     transform_teams,
     transform_matches,
-    transform_all_match_stats
+    transform_all_match_stats,
+    transform_rosters,
+    transform_players
 )
 from src.pipeline.load import (
     load_competitions, 
     load_seasons,
     load_teams,
     load_matches,
-    load_all_match_stats 
+    load_all_match_stats,
+    load_rosters,
+    load_players
 )
 
 '''
 I’d do them in this order because of the foreign-key dependencies:
 
-match_stats
 players
 rosters
 player_season_stats
@@ -45,6 +49,7 @@ def run():
     
     raw_match_stats_data = extract_match_stats()
     '''
+    raw_roster_data, raw_player_data = extract_rosters_and_players()
     print("Extraction complete.\n")
     
     # Transformation
@@ -55,7 +60,10 @@ def run():
     transformed_match_data = transform_matches(raw_match_data)
 
     transformed_match_stats_data = transform_all_match_stats(raw_match_stats_data)
+    
+    transformed_player_data = transform_players(raw_player_data)
     '''
+    transformed_roster_data = transform_rosters(raw_roster_data)
     print("Transformation complete.\n")
 
     # Loading
@@ -66,7 +74,10 @@ def run():
     load_matches(transformed_match_data)
     
     load_all_match_stats(transformed_match_stats_data)
+    
+    load_players(transformed_player_data)
     '''
+    load_rosters(transformed_roster_data)
     print("Loading complete.\n")
     print("Pipeline finished successfully.")
 

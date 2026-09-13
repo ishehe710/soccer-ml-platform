@@ -20,7 +20,11 @@ from datetime import datetime
 # in-project imports
 from src.config.settings import settings
 from src.config.pipeline import COMPETITIONS
-from src.database.queries import get_seasons_api_ids, get_all_matches_finished_ids
+from src.database.queries import (
+    get_seasons_api_ids, 
+    get_all_matches_finished_ids,
+    get_all_team_ids
+    )
 
 '''
         ESTABLISH session
@@ -256,4 +260,31 @@ def extract_match_stats():
 
 def extract_rosters_and_players():
     
-    roster_path = f"/api/v2/teams/{id}/squad/ "
+    team_ids = get_all_team_ids()
+    
+    roster_data = []
+    player_data = []
+    
+    for i, team_id in enumerate(team_ids):
+        print(f"Fetching team's roster data {i+1}/{len(team_ids)}")
+
+        roster_path = f"/api/v2/teams/{team_id}/squad/"
+        
+        roster_response = fetch_api_data(roster_path)
+        
+        players = roster_response["players"]
+        
+        roster_data.append(roster_response)
+        
+        for player in players:
+            
+            id = player["id"]
+            
+            player_path = f"/api/v2/players/{id}/"
+            
+            player_response = fetch_api_data(player_path)
+            
+            player_data.append(player_response)
+            
+        
+    return (roster_data, player_data)
