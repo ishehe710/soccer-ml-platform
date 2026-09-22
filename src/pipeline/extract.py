@@ -19,11 +19,12 @@ from datetime import datetime
 
 # in-project imports
 from src.config.settings import settings
-from src.config.pipeline import COMPETITIONS
+from src.config.pipeline import COMPETITIONS, PREMIER_LEAGUE_ID
 from src.database.queries import (
     get_seasons_api_ids, 
     get_all_matches_finished_ids,
-    get_all_team_ids
+    get_all_team_ids,
+    get_all_player_ids
     )
 
 '''
@@ -255,6 +256,29 @@ def extract_match_stats():
     return all_matches_stats
 
 '''
+        PLAYER_SEASON_STATS
+'''
+
+def extract_player_season_stats():
+    
+    player_ids = get_all_player_ids()
+    
+    data = []
+    
+    for i, player_id in enumerate(player_ids):
+        print(f"Fetching player career stats {i+1}/{len(player_ids)}")
+        
+        path = f"/api/v2/players/{player_id}/career/"
+        
+        response = fetch_api_data(path)
+        
+        data.append(response)
+        
+    print("Extracting player season stats was successful.")
+    
+    return data
+
+'''
         PLAYERS + ROSTERS
 '''
 
@@ -286,5 +310,27 @@ def extract_rosters_and_players():
             
             player_data.append(player_response)
             
-        
+    print("Extracting rosters was successful.")
+    
     return (roster_data, player_data)
+
+'''
+        STANDINGS
+'''
+
+def extract_standings():
+    
+    season_ids = get_seasons_api_ids()
+    
+    standings_data = []
+    for season_id in season_ids:
+            
+        path = f"/api/v2/leagues/{PREMIER_LEAGUE_ID}/standings/?season_id={season_id}"
+        
+        response = fetch_api_data(path)
+        
+        standings_data.append(response)
+    
+    print("Extracting standings was successful.")
+    
+    return standings_data

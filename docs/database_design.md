@@ -180,7 +180,7 @@ NOTE: UNIQUE (team_id, season_id, player_id)
 | Field | Type | Constraints |
 |---|---|---|
 | id | INTEGER | PK |
-| player_id | INTEGER | FK, NOT NULL |
+| player_id | INTEGER UNIQUE | FK, NOT NULL |
 | season_id | INTEGER | FK, NOT NULL |
 | comp_id | INTEGER | FK, NOT NULL|
 | team_id | INTEGER | FK, NOT NULL|
@@ -188,7 +188,7 @@ NOTE: UNIQUE (team_id, season_id, player_id)
 | minutes | INTEGER | NOT NULL |
 | goals | INTEGER | NOT NULL |
 | assists | INTEGER | NOT NULL |
-| avg_rating | DECIMAL | NOT NULL |
+| avg_rating | DECIMAL | |
 | created_at | TIMESTAMPTZ | NOT NULL |
 
 NOTE: UNIQUE (player_id, season_id, comp_id, team_id)

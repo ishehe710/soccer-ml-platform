@@ -92,3 +92,21 @@ def get_team_ids_from_match(match_id):
             away_team = data[0][1]
             return (home_team, away_team)
             
+'''
+        PLAYERS
+'''
+
+def get_all_player_ids():
+    
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            
+            player_ids = []
+            
+            cur.execute("SELECT api_id FROM players")
+            
+            for id in cur:
+                player_ids.append(id[0])
+                
+            return player_ids
+        

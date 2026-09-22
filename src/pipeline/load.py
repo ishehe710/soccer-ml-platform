@@ -1,7 +1,7 @@
 
 # in-project imports
 from src.database.connect_db import get_connection
-from src.database.queries import team_exists, get_competition_ids
+from src.database.queries import team_exists, get_all_team_ids, get_seasons_api_ids
 from src.pipeline.extract import extract_a_team
 from src.pipeline.transform import transform_team
 from src.config.pipeline import COMPETITIONS
@@ -38,6 +38,8 @@ def load_competitions(comps):
     for comp in comps:
         load_competition(comp)
         
+    print("Loading competitions successful.")
+        
 '''
         SEASONS
 '''
@@ -71,6 +73,8 @@ def load_seasons(seasons):
     
     for season in seasons:
         load_season(season)
+    
+    print("Loading seasons successful.")
         
 '''
         TEAMS
@@ -106,12 +110,15 @@ def load_team_v2(team_api_id):
     team_data = extract_a_team(team_api_id)
     transformed_team_data = transform_team(team_data)
     load_team(transformed_team_data)
+    
+    print(f"Loading team {team_api_id} was successful.")
 
 def load_teams(teams):
     
     for team in teams:
         load_team(team)
 
+    print("Loading teams successful.")
         
 '''
         MATCHES
@@ -164,6 +171,8 @@ def load_matches(matches):
     
     for match in matches:
         load_match(match)
+        
+    print("Loading matches successful.")
         
 '''
         MATCH_STATS
@@ -250,6 +259,8 @@ def load_all_match_stats(all_match_stats):
     
     for match_stats in all_match_stats:
         load_a_match_stats(match_stats)
+        
+    print("Loading match stats successful.")
 
 '''
         ROSTERS
@@ -268,7 +279,7 @@ def load_roster(roster):
                         (team_id, player_id, jersey_number, position, created_at)
                     VALUES 
                         (%s, %s, %s, %s, NOW())
-                    ON CONFLICT (team_id)
+                    ON CONFLICT (team_id, player_id)
                     DO UPDATE SET
                         player_id = EXCLUDED.player_id,
                         jersey_number = EXCLUDED.jersey_number,
@@ -288,6 +299,8 @@ def load_rosters(rosters):
     
     for roster in rosters:
         load_roster(roster)
+        
+    print("Loading rosters successful.")
 
 '''
         PLAYERS
@@ -339,3 +352,152 @@ def load_players(players):
     for player in players:
         load_player(player)
         
+    print("Loading players successful.")
+
+'''
+    PLAYER_SEASON_STATS
+'''
+
+def load_player_season_stats(player_stats, team_ids, season_ids):
+
+    if (
+        player_stats.team_id in team_ids
+        and player_stats.season_id in season_ids
+        and player_stats.comp_id in COMPETITIONS
+    ):
+        return (
+            player_stats.player_id,
+            player_stats.season_id,
+            player_stats.comp_id,
+            player_stats.team_id,
+            player_stats.matches,
+            player_stats.minutes,
+            player_stats.goals,
+            player_stats.assists,
+            player_stats.avg_rating
+        )
+
+    return None
+
+
+def load_players_season_stats(players_stats):
+
+    season_ids = get_seasons_api_ids()
+    team_ids = get_all_team_ids()
+
+    values = []
+
+    for player_stats in players_stats:
+
+        player_stats_value = load_player_season_stats(
+            player_stats,
+            team_ids,
+            season_ids
+        )
+
+        if player_stats_value:
+            values.append(player_stats_value)
+
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+
+            cur.executemany(
+                """
+                INSERT INTO player_season_stats
+                    (
+                        player_id,
+                        season_id,
+                        comp_id,
+                        team_id,
+                        matches,
+                        minutes,
+                        goals,
+                        assists,
+                        avg_rating,
+                        created_at
+                    )
+                VALUES
+                    (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                ON CONFLICT (player_id, season_id, comp_id, team_id)
+                DO UPDATE SET
+                    matches = EXCLUDED.matches,
+                    minutes = EXCLUDED.minutes,
+                    goals = EXCLUDED.goals,
+                    assists = EXCLUDED.assists,
+                    avg_rating = EXCLUDED.avg_rating
+                """,
+                values
+            )
+            
+            conn.commit()
+            
+    print("Loading player season stats successful.")
+            
+'''
+        STANDINGS
+'''
+
+def load_standings(standings):
+    
+    loaded_standings = []
+    
+    for standing in standings:
+        loaded_standings.append(
+            (
+                standing.season_id,
+                standing.team_id,
+                standing.position,
+                standing.games_played,
+                standing.wins,
+                standing.draws,
+                standing.losses,
+                standing.goals_for,
+                standing.goals_against,
+                standing.goal_difference,
+                standing.form,
+                standing.points
+            )
+        )
+        
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            
+            cur.executemany(
+                """
+                INSERT INTO standings
+                    (
+                        season_id,
+                        team_id,
+                        position,
+                        games_played,
+                        wins,
+                        draws,
+                        losses,
+                        goals_for,
+                        goals_against,
+                        goal_difference,
+                        form,
+                        points,
+                        created_at
+                    )
+                VALUES 
+                    (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
+                ON CONFLICT (season_id, team_id)
+                DO UPDATE SET
+                    position = EXCLUDED.position,
+                    games_played = EXCLUDED.games_played,
+                    wins = EXCLUDED.wins,
+                    draws = EXCLUDED.draws,
+                    losses = EXCLUDED.losses,
+                    goals_for = EXCLUDED.goals_for,
+                    goals_against = EXCLUDED.goals_against,
+                    goal_difference = EXCLUDED.goal_difference,
+                    form = EXCLUDED.form,
+                    points = EXCLUDED.points
+                """,
+                    loaded_standings
+                )
+            
+            conn.commit()
+            
+    print("Loading standings successful.")

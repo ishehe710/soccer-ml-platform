@@ -7,6 +7,8 @@ from src.models.match import Match
 from src.models.match_stats import MatchStats
 from src.models.roster import Roster
 from src.models.player import Player
+from src.models.player_season_stats import PlayerSeasonStats
+from src.models.standing import Standing
 from src.config.models import IMG_API_URL
 from src.database.queries import get_team_ids_from_match
 
@@ -29,6 +31,8 @@ def transform_competition(comp):
 def transform_competitions(comps):
     
     transformed_comps = [transform_competition(comp) for comp in comps]
+    
+    print("Transfomring seasons was successful.")
     
     return transformed_comps
     
@@ -59,6 +63,8 @@ def transform_seasons(seasons):
     transformed_seasons = []
     for comp_id, seasons_data in seasons.items():
         transformed_seasons += [transform_season(season, comp_id) for season in seasons_data]
+        
+    print("Transfomring seasons was successful.")
     
     return transformed_seasons
 
@@ -82,6 +88,8 @@ def transform_team(team):
 def transform_teams(teams):
     
     transformed_teams = [transform_team(team) for team in teams]
+    
+    print("Transforming teams was successful.")
     
     return transformed_teams
 
@@ -122,6 +130,8 @@ def transform_match(match):
 def transform_matches(matches):
     
     transformed_matches = [transform_match(match) for match in matches]
+    
+    print("Transforming matches was successful.")
     
     return transformed_matches
 
@@ -191,6 +201,8 @@ def transform_all_match_stats(all_match_stats):
         
         transformed_match_stats.extend(transformed_stats)
     
+    print("Transforming match stats was successful.")
+    
     return transformed_match_stats
         
 '''
@@ -219,6 +231,8 @@ def transform_rosters(rosters):
     
     transformed_rosters = [ transform_roster(roster) for roster in rosters]
     
+    print("Transforming rosters was successful.")
+    
     return transformed_rosters
 
 '''
@@ -228,7 +242,7 @@ def transform_rosters(rosters):
 def transform_player(player_data):
     
     id = player_data["id"]
-    img_path = f"{IMG_API_URL}/player/{id}"
+    img_path = f"{IMG_API_URL}player/{id}"
     
     return Player(
         api_id=id,
@@ -248,4 +262,99 @@ def transform_players(players):
     
     transformed_players = [ transform_player(player) for player in players]
     
+    print("Transforming players was successful.")
+    
     return transformed_players
+
+'''
+        PLAYER_SEASON_STATS
+'''
+
+# single player career stats
+def transform_a_player_season_stats(player_seasons_data):
+    
+    player_id = player_seasons_data["player_id"]
+    
+    seasons = player_seasons_data["seasons"]
+    
+    transformed_seasons_data = []
+    
+    for season in seasons:
+        
+        transformed_seasons_data.append(
+            PlayerSeasonStats(
+                player_id=player_id,
+                season_id=season["season_id"],
+                comp_id=season["league_id"],
+                team_id=season["team_id"],
+                matches=season["matches"],
+                minutes=season["minutes"],
+                goals=season["goals"],
+                assists=season["assists"],
+                avg_rating=season["avg_rating"]
+            )
+        )
+        
+    return transformed_seasons_data
+    
+def transform_all_player_season_stats(player_seasons_stats):
+    
+    transformed_player_season_stats = []
+    
+    for player_stats in player_seasons_stats:
+        
+        transformed_stats = transform_a_player_season_stats(player_stats)
+        
+        transformed_player_season_stats.extend(transformed_stats)
+        
+    print("Transforming player season stats was successful.")
+        
+    return transformed_player_season_stats
+
+'''
+        STANDINGS
+'''
+
+def transform_standing(raw_standing):
+    
+    if raw_standing.get("season"):
+    
+        season_id = raw_standing["season"]["id"]
+        standings_data = raw_standing["standings"]
+        
+        transformed_league_standings = []
+        
+        for team in standings_data:
+            transformed_league_standings.append(
+                Standing(
+                    season_id=season_id,
+                    team_id=team["team_id"],
+                    position=team["position"],
+                    games_played=team["played"],
+                    wins=team["won"],
+                    draws=team["drawn"],
+                    losses=team["lost"],
+                    goals_for=team["gf"],
+                    goals_against=team["ga"],
+                    goal_difference=team["gd"],
+                    form=team["form"],
+                    points=team["pts"]
+                )              
+            ) 
+            
+        return transformed_league_standings
+    
+    return None
+
+def transform_standings(raw_standings):
+    
+    transformed_standings = []
+    
+    for raw_standing in raw_standings:
+        transformed_standing = transform_standing(raw_standing)
+        if transformed_standing:
+            transformed_standings.extend(transformed_standing)
+        
+    print("Transforming standings was successful.")
+        
+    return transformed_standings

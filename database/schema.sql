@@ -51,7 +51,7 @@ CREATE TABLE teams (
 
 CREATE TABLE rosters (
     id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    team_id INTEGER UNIQUE REFERENCES teams(api_id),
+    team_id INTEGER REFERENCES teams(api_id),
     player_id INTEGER REFERENCES players(api_id),
     UNIQUE (team_id, player_id),
     jersey_number INTEGER,
@@ -127,10 +127,11 @@ CREATE TABLE player_season_stats (
     season_id INTEGER REFERENCES seasons(api_id),
     comp_id INTEGER REFERENCES competitions(api_id),
     team_id INTEGER REFERENCES teams(api_id),
+    UNIQUE (player_id, season_id, team_id, comp_id),
     matches INTEGER NOT NULL,
     minutes INTEGER NOT NULL,
     goals INTEGER NOT NULL,
     assists INTEGER NOT NULL,
-    avg_rating DECIMAL NOT NULL,
+    avg_rating DECIMAL,
     created_at TIMESTAMPTZ NOT NULL
 );

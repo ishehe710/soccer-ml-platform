@@ -5,10 +5,12 @@ from src.pipeline.extract import (
     extract_teams,
     extract_matches,
     extract_a_team,
-    extract_match_stats
+    extract_match_stats,
+    extract_standings
     )
 
-data = extract_match_stats()
+
+data = extract_standings()
 
 print("Extracting data")
 print("data", data)
