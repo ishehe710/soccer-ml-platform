@@ -24,7 +24,8 @@ from src.database.queries import (
     get_seasons_api_ids, 
     get_all_matches_finished_ids,
     get_all_team_ids,
-    get_all_player_ids
+    get_all_player_ids,
+    get_all_active_player_ids
     )
 
 '''
@@ -334,3 +335,68 @@ def extract_standings():
     print("Extracting standings was successful.")
     
     return standings_data
+
+
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+        UPDATE FUNCTIONS
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+def extract_match_updates(match_ids):
+        
+    raw_data = []
+    n = len(match_ids)
+    for i, match_id in enumerate(match_ids):
+        print(f"Fetching updated match info for matches {i+1}/{n}")
+        path = f"/api/v2/events/{match_id}"
+        
+        response = fetch_api_data(path)
+        
+        raw_data.append(response)
+    
+    return raw_data
+
+'''
+        MATCH STATS
+'''
+
+
+def extract_match_stats_updates(match_ids):
+    
+        
+    raw_data = []
+    n = len(match_ids)
+
+
+    for i, match_id in enumerate(match_ids):
+        print(f"Fetching updated match stats for matches {i+1}/{n}")
+        path = f"/api/v2/events/{match_id}/stats"
+        
+        response = fetch_api_data(path)
+        
+        raw_data.append(response)
+    
+    return raw_data
+
+def extract_player_season_stats_updates():
+    
+    player_ids = get_all_active_player_ids()
+    
+    raw_data = []
+    n = len(player_ids)
+
+    for i, player_id in enumerate(player_ids):
+        print(f"Fetching for updated player career stats for players {i+1}/{n}")
+        path = f"/api/v2/players/{player_id}/career/"
+        
+        response = fetch_api_data(path)
+        
+        raw_data.append(response)
+    
+    return raw_data
+
+def extract_standing_updates(season_id):
+    
+    path = f"/api/v2/leagues/{PREMIER_LEAGUE_ID}/standings/?season_id={season_id}"
+
+    return [fetch_api_data(path)]
+

@@ -33,12 +33,6 @@ from src.pipeline.load import (
     load_standings
 )
 
-'''
-I’d do them in this order because of the foreign-key dependencies:
-
-standings
-'''
-
 def run():
     print("Starting pipeline...")
     
