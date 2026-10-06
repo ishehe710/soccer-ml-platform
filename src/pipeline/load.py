@@ -1,15 +1,30 @@
+"""
+Database loading functions for the Soccer ML Platform ETL pipeline.
 
+Loads transformed data into PostgreSQL using insert and upsert operations.
+"""
 # in-project imports
 from src.database.connect_db import get_connection
 from src.database.queries import team_exists, get_all_team_ids, get_seasons_api_ids
 from src.pipeline.extract import extract_a_team
 from src.pipeline.transform import transform_team
 from src.config.pipeline import COMPETITIONS
+from src.config.logger import create_logger
+
+# Instanting module logger
+logger = create_logger(__name__)
 
 '''
         COMPETITIONS
 '''
 def load_competition(competition):
+    """
+        Loads data into for a single compeition for Postgres table Compeitions.
+        
+        Args:
+            compeition (Competition): Transformed and validated competition data.
+    """
+    
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -34,16 +49,28 @@ def load_competition(competition):
             conn.commit()
             
 def load_competitions(comps):
+    """Loads data for multiple competitions
+
+    Args:
+        comps (list[Competition]): List of transformed and validated competition data.
+    """
     
     for comp in comps:
         load_competition(comp)
         
-    print("Loading competitions successful.")
+    logger.info("Loading competitions successful, with %d inserts.", len(comps))
         
 '''
         SEASONS
 '''
 def load_season(season):
+    """
+        Load data for a single season.
+        
+        Args:
+            season (Season): Transformed and validated season data.
+    """
+    
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -70,16 +97,28 @@ def load_season(season):
             conn.commit()
             
 def load_seasons(seasons):
+    """Loading data for multiple seasons.
+
+    Args:
+        seasons (list[Seasons]): List of transformed season data.
+    """
     
     for season in seasons:
         load_season(season)
     
-    print("Loading seasons successful.")
+    logger.info("Loading seasons successful, with %d inserts.", len(seasons))
         
 '''
         TEAMS
 '''
 def load_team(team):
+    """
+        Load data for a single team.
+        
+        Args:
+            team (Team): Transformed team data.
+    """
+
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -107,23 +146,40 @@ def load_team(team):
             conn.commit()
 
 def load_team_v2(team_api_id):
+    """Loads data for single team given a team id.
+
+    Args:
+        team_api_id (int): Official api id for a team to loaded into the database.
+    """
     team_data = extract_a_team(team_api_id)
     transformed_team_data = transform_team(team_data)
     load_team(transformed_team_data)
     
-    print(f"Loading team {team_api_id} was successful.")
+    logger.info("Loading team %d was successful.", team_api_id)
 
 def load_teams(teams):
+    """Load data for multiple teams.
+
+    Args:
+        teams (list[Teams]): List of transformed data for multiple teams.
+    """
     
     for team in teams:
         load_team(team)
 
-    print("Loading teams successful.")
+    logger.info("Loading teams successful, with %d inserts.", len(teams))
         
 '''
         MATCHES
 '''
 def load_match(match):
+    """
+        Load data for a single match into the database.
+        
+        Args:
+            match (Match): Transformed match data.
+    """
+    
     with get_connection() as conn:
         with conn.cursor() as cur:
             
@@ -168,11 +224,16 @@ def load_match(match):
                 conn.commit()
 
 def load_matches(matches):
+    """Load data of multiple matches.
+
+    Args:
+        matches (list[Match]): List of tranformed data of multiple matches.
+    """
     
     for match in matches:
         load_match(match)
         
-    print("Loading matches successful.")
+    logger.info("Loading matches successful, with %d inserts.", len(matches))
         
 '''
         MATCH_STATS
@@ -180,12 +241,15 @@ def load_matches(matches):
 
 # per team
 def load_a_match_stats(a_match_stats):
+    """
+        Loads a single teams match stats for one game.
+        
+        Args:
+            a_match_stats (MatchStats): Transformed match stats for one team for one game. 
+    """
     
     with get_connection() as conn:
         with conn.cursor() as cur:
-            
-            #if not team_exists(a_match_stats.team_id):
-            #    load_team_v2(a_match_stats.team_id)
             
             cur.execute(
                 """
@@ -256,17 +320,27 @@ def load_a_match_stats(a_match_stats):
             
 # loading all matches per team stats       
 def load_all_match_stats(all_match_stats):
+    """Load match stats for mutiple games.
+
+    Args:
+        all_match_stats (list[MatchStats]): List of transformed match stats for mutiple games.
+    """
     
     for match_stats in all_match_stats:
         load_a_match_stats(match_stats)
         
-    print("Loading match stats successful.")
+    logger.info("Loading match stats successful, with %d inserts.", len(all_match_stats))
 
 '''
         ROSTERS
 '''
-
 def load_roster(roster):
+    """
+        Load data for a single roster.
+        
+        Args:
+            roster (list[Roster]): Transformed roster data.
+    """
     
     for roster_player in roster:
     
@@ -296,17 +370,27 @@ def load_roster(roster):
                 conn.commit()
             
 def load_rosters(rosters):
+    """Load data for multiple rosters.
+
+    Args:
+        rosters (list[list[Roster]]): List of data of transfomed rosters.
+    """
     
     for roster in rosters:
         load_roster(roster)
         
-    print("Loading rosters successful.")
+    logger.info("Loading rosters successful, with %d inserts.", len(rosters))
 
 '''
         PLAYERS
 '''
-
 def load_player(player):
+    """
+        Load data for a single player.
+        
+        Args:
+            player (Player): Transformed data of a player.
+    """
     
     with get_connection() as conn:
         with conn.cursor() as cur:
@@ -348,18 +432,32 @@ def load_player(player):
             conn.commit()
             
 def load_players(players):
+    """Load data of multiple players.
+
+    Args:
+        players (list[Player]): List of transformed data of multiple players.
+    """
 
     for player in players:
         load_player(player)
         
-    print("Loading players successful.")
+    logger.info("Loading players successful, with %d inserts.", len(players))
 
 '''
     PLAYER_SEASON_STATS
 '''
-
 def load_player_season_stats(player_stats, team_ids, season_ids):
+    """Load data of a single player's career season stats.
 
+    Args:
+        player_stats (PlayerSeasonStats): Transformed player career stats for one season.
+        team_ids (list[int]): Offical api ids for teams current in the database. 
+        season_ids (list[int]): Offical api ids for seasons currently in the database. 
+
+    Returns:
+        _type_: _description_
+    """
+    
     if (
         player_stats.team_id in team_ids
         and player_stats.season_id in season_ids
@@ -379,9 +477,11 @@ def load_player_season_stats(player_stats, team_ids, season_ids):
 
     return None
 
-
 def load_players_season_stats(players_stats):
-
+    """
+        Load data for multiple players' career season stats.
+    """
+    
     season_ids = get_seasons_api_ids()
     team_ids = get_all_team_ids()
 
@@ -431,13 +531,18 @@ def load_players_season_stats(players_stats):
             
             conn.commit()
             
-    print("Loading player season stats successful.")
+    logger.info("Loading player season stats successful, with %d inserts.", len(values))
             
 '''
         STANDINGS
 '''
-
 def load_standings(standings):
+    """
+        Load standings data for multiple competitions and seasons.
+        
+        Args:
+            standings (list[Standing]): List of transformed data of standings.
+    """ 
     
     loaded_standings = []
     
@@ -500,4 +605,4 @@ def load_standings(standings):
             
             conn.commit()
             
-    print("Loading standings successful.")
+    logger.info("Loading standings successful, with %d inserts.", len(loaded_standings))

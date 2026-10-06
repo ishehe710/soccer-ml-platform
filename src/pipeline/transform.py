@@ -1,4 +1,9 @@
+"""
+Transformation functions for the Soccer ML Platform ETL pipeline.
 
+Converts raw Sports Bzzoiro API responses into validated application models
+before database loading.
+"""
 # in-project imports
 from src.models.competition import Competition
 from src.models.season import Season
@@ -11,12 +16,23 @@ from src.models.player_season_stats import PlayerSeasonStats
 from src.models.standing import Standing
 from src.config.models import IMG_API_URL
 from src.database.queries import get_team_ids_from_match
+from src.config.logger import create_logger
+
+# Instantiating module logger
+logger = create_logger(__name__)
 
 '''
     Competitions
 '''
-
 def transform_competition(comp):
+    """Transforms and validates a single instace of raw competition data.
+
+    Args:
+        comp (dict): A single raw extracted competition data. 
+
+    Returns:
+        Competition: A transformed and validated compeition data.
+    """
     
     id = comp["id"]
     path = f"{IMG_API_URL}league/{id}"
@@ -29,18 +45,34 @@ def transform_competition(comp):
     )
     
 def transform_competitions(comps):
+    """Transforms and validates all given raw compeition data.
+
+    Args:
+        comps (list[dict]): List of raw competition data.
+
+    Returns:
+        list[Competition]: List of transformed and validation competition data.
+    """
     
     transformed_comps = [transform_competition(comp) for comp in comps]
     
-    print("Transfomring seasons was successful.")
+    logger.info("Transfomring seasons was successful.")
     
     return transformed_comps
     
 '''
     Seasons
 '''
-
 def transform_season(season, id):
+    """Transform and validate a single instance of raw season data.
+
+    Args:
+        season (dict): Raw extracted season data.
+        id (int): Officail api id of the season.
+
+    Returns:
+        Season: Transformed and validated season data.
+    """
     return Season(
         api_id=season['id'],
         comp_id=id,
@@ -64,15 +96,22 @@ def transform_seasons(seasons):
     for comp_id, seasons_data in seasons.items():
         transformed_seasons += [transform_season(season, comp_id) for season in seasons_data]
         
-    print("Transfomring seasons was successful.")
+    logger.info("Transfomring seasons was successful.")
     
     return transformed_seasons
 
 '''
     TEAMS
 '''
-
 def transform_team(team):
+    """Transform and validate a single raw data info of a team.
+
+    Args:
+        team (dict): Raw team data information.
+
+    Returns:
+        Team: Transformed and validated team data.
+    """
     
     id =  team["id"]
     path = f"{IMG_API_URL}team/{id}"
@@ -86,18 +125,33 @@ def transform_team(team):
     )
         
 def transform_teams(teams):
+    """Transform and validate a list raw data for multiple teams.
+    
+    Args:
+        teams (list[dict]): List of raw data for multiple teams.
+
+    Returns:
+        list[Team]: List of transformed and validated teams data.
+    """
     
     transformed_teams = [transform_team(team) for team in teams]
     
-    print("Transforming teams was successful.")
+    logger.info("Transforming teams was successful.")
     
     return transformed_teams
 
 '''
     MATCHES
 '''
-
 def transform_match(match):
+    """Transforming and validating for a single raw match data.
+
+    Args:
+        match (dict): Raw match data.
+
+    Returns:
+        Match: Transformed and validated match data.
+    """
     
     status = match["status"]
     
@@ -128,22 +182,37 @@ def transform_match(match):
         )
         
 def transform_matches(matches):
-    
+    """Transform and validate a list raw data for multiple matches.
+        
+    Args:
+        teams (list[dict]): List of raw data for multiple matches.
+
+    Returns:
+        list[Match]: List of transformed and validated data for multiple matches.
+    """
     transformed_matches = [transform_match(match) for match in matches]
     
-    print("Transforming matches was successful.")
+    logger.info("Transforming matches was successful.")
     
     return transformed_matches
 
 '''
         MATCH_STATS
 '''
-
 def transform_team_match_stats(team_match_stats, match_id, team_id):
+    """Transforms and validates a single instance of raw match stats for one team of that game.
+
+    Args:
+        team_match_stats (dict): Raw match stats for a single game.
+        match_id (int): Offical api of the match.
+        team_id (_type_): The offical api id of the team's stats for that game.
+
+    Returns:
+        _type_: _description_
+    """
     
     xg_dict = team_match_stats.get("xg")
     crosses_dict = team_match_stats.get("crosses")
-    
     
     return MatchStats(
         match_id=match_id,
@@ -175,6 +244,14 @@ def transform_team_match_stats(team_match_stats, match_id, team_id):
     )
 
 def transform_match_stats(match_stats):
+    """Transforms and validates the home and away teams match stats for one match.
+
+    Args:
+        match_stats (dict): Raw match stats for a single game for the two teams.
+
+    Returns:
+        tuple(MatchStats, MatchStats): A tuple of transformed and validated match stats for both home and away teams.
+    """
         
     match_id = match_stats["event_id"]
     stats = match_stats["stats"]
@@ -192,6 +269,14 @@ def transform_match_stats(match_stats):
     return (home_stats, away_stats)
 
 def transform_all_match_stats(all_match_stats):
+    """Transforming and validating match stats for multiple games.
+
+    Args:
+        all_match_stats (list[dict]): List of raw match stats for multiple games.
+
+    Returns:
+        list[MatchStats]: Transformed and validated match stats data for multiple teams.
+    """
     
     transformed_match_stats = []
     
@@ -201,15 +286,22 @@ def transform_all_match_stats(all_match_stats):
         
         transformed_match_stats.extend(transformed_stats)
     
-    print("Transforming match stats was successful.")
+    logger.info("Transforming match stats was successful.")
     
     return transformed_match_stats
         
 '''
         ROSTERS
 '''
-
 def transform_roster(roster):
+    """Transform and validate raw data for a single team roster.
+
+    Args:
+        roster (dict): Raw data for a single roster
+
+    Returns:
+        list[roster]: Transformed and validated list of a team's roster.
+    """
     
     team_id = roster["team_id"]
     players = roster["players"]
@@ -228,18 +320,33 @@ def transform_roster(roster):
     return transformed_roster
 
 def transform_rosters(rosters):
+    """Transform and validate raw data of multiple rosters.
+
+    Args:
+        rosters (list[dict]): List of raw data of rosters.
+
+    Returns:
+        list[list[Rosters]]: List of rosters data that have been transformed and validated.
+    """
     
     transformed_rosters = [ transform_roster(roster) for roster in rosters]
     
-    print("Transforming rosters was successful.")
+    logger.info("Transforming rosters was successful.")
     
     return transformed_rosters
 
 '''
         PLAYERS
 '''
-
 def transform_player(player_data):
+    """Transforms and validates raw data of a single player.
+
+    Args:
+        player_data (dict): Raw data of a single player.
+
+    Returns:
+        Player: Transformed and validated player data.
+    """
     
     id = player_data["id"]
     img_path = f"{IMG_API_URL}player/{id}"
@@ -259,10 +366,18 @@ def transform_player(player_data):
     )
     
 def transform_players(players):
+    """Transform and validate raw data of multiple players.
+
+    Args:
+        players (list[dict]): List of raw player data.
+
+    Returns:
+        list[Player]: Transformed and validate data for multiple players.
+    """
     
     transformed_players = [ transform_player(player) for player in players]
     
-    print("Transforming players was successful.")
+    logger.info("Transforming players was successful.")
     
     return transformed_players
 
@@ -272,6 +387,14 @@ def transform_players(players):
 
 # single player career stats
 def transform_a_player_season_stats(player_seasons_data):
+    """Transform and validate raw data for single player's career seasons stats.
+
+    Args:
+        player_seasons_data (dict): Raw data of a player's career stats.
+
+    Returns:
+        list[PlayerSeasonStats]: Transformed and validated data of a single player's career season stats.
+    """
     
     player_id = player_seasons_data["player_id"]
     
@@ -298,6 +421,14 @@ def transform_a_player_season_stats(player_seasons_data):
     return transformed_seasons_data
     
 def transform_all_player_season_stats(player_seasons_stats):
+    """Tranforming and validating raw data of mutiple players career season stats.
+
+    Args:
+        player_seasons_stats (list[dict]): List of raw multiple player season stats.
+
+    Returns:
+        list[PlayerSeasonStats]: List of transformed and validate player career season stats.
+    """
     
     transformed_player_season_stats = []
     
@@ -307,15 +438,23 @@ def transform_all_player_season_stats(player_seasons_stats):
         
         transformed_player_season_stats.extend(transformed_stats)
         
-    print("Transforming player season stats was successful.")
+    logger.info("Transforming player season stats was successful.")
         
     return transformed_player_season_stats
 
 '''
         STANDINGS
 '''
-
 def transform_standing(raw_standing):
+    """Transform and validate raw standing data for a single season.
+
+    Args:
+        raw_standing (dict): Raw standings data for a single season
+
+    Returns:
+        list[Standing]: Transformed and validated standings data for a single season, 
+            if season id is available, otherwise None.
+    """
     
     if raw_standing.get("season"):
     
@@ -347,6 +486,14 @@ def transform_standing(raw_standing):
     return None
 
 def transform_standings(raw_standings):
+    """Transforms and validates raw standings data for multiple seasons and compeitions.
+
+    Args:
+        raw_standings (list[dict]): List of raw standings for multiple seasons and competitions.
+
+    Returns:
+        list[Standings]: Transformed and validated standings data.
+    """
     
     transformed_standings = []
     
@@ -355,6 +502,6 @@ def transform_standings(raw_standings):
         if transformed_standing:
             transformed_standings.extend(transformed_standing)
         
-    print("Transforming standings was successful.")
+    logger.info("Transforming standings was successful.")
         
     return transformed_standings

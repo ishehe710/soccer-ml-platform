@@ -1,16 +1,8 @@
 """
-extract.py
+Data extraction functions for the Soccer ML Platform ETL pipeline.
 
-Handles extraction of raw soccer data from the Bzzoiro Sports Data API.
-
-Responsibilities:
-    - Build API request URLs.
-    - Authenticate API requests.
-    - Fetch raw data from the Bzzoiro API.
-    - Return API responses for downstream transformation.
-
-Pipeline stage:
-    Bzzoiro Sports Data API -> [EXTRACT] -> Raw API data
+Retrieves competition, season, team, match, player, and statistics data
+from the Sports Bzzoiro API.
 """
 import requests
 from requests.adapters import HTTPAdapter
@@ -27,6 +19,10 @@ from src.database.queries import (
     get_all_player_ids,
     get_all_active_player_ids
     )
+from src.config.logger import create_logger
+
+# Instantiating module logger
+logger = create_logger(__name__)
 
 '''
         ESTABLISH session
@@ -46,31 +42,38 @@ adapter = HTTPAdapter(max_retries=retry_strategy)
 session.mount("http://", adapter)
 session.mount("https://", adapter)
 
-
-# base fetch
+'''
+        ESSSENTIAL FUNCTIONS
+'''
 def fetch_api_data(path):
-    """This function fetche API data indicated by the parameter path, form the SPORT 
-        BZZOIRO Data website.
+    """This function fetches data from the Sports Bzzoiro API indicated by the path given.
 
     Args:
         path (str): The path of what kind of data to get from website.
 
     Returns:
-        A Python dictionary of the API request data
+        dict: A Python dictionary of the API request data
     """
     
     # fetch request for data 
     headers = {"Authorization": f"Token {settings.sports_bzzoiro_api_key}"}
     r = session.get(settings.sports_bzzoiro_api_url + path, headers=headers, timeout=30)
     
-    
-    print("URL:", r.url)
-    print("Status:", r.status_code)
+    logger.debug("URL: %s", r.url)
+    logger.debug("Status: %d", r.status_code)
 
     r.raise_for_status()
     
-    
     return r.json()
+
+'''
+########################################################################
+#####################  DATABASE INITIALIZATION FUNCTIONS ###############
+########################################################################
+
+    Functions that extracts data to initialize the database with information 
+    from the last 6 seasons.
+'''
 
 
 '''
@@ -80,8 +83,7 @@ def extract_competitions():
     """Calls the Sports Bzzoiro Data API to get information for competitions for the website.
 
     Returns:
-        list: A list of dicts that contain league data.
-            [{}, ..., {}]
+        list[dict]: A list of dicts that contain league data.
     """
     
     path = f"/api/v2/leagues"
@@ -106,7 +108,6 @@ def extract_competitions():
     print("Succesfully extracted competitions.")
     
     return comps_data
-
 
 '''
         SEASONS
@@ -150,7 +151,6 @@ def extract_seasons():
 '''
         TEAMS
 '''
-
 def extract_teams():
     """Calls the Sports Bzzoiro Data API to get information for in competition teams data
         per competition indicated
@@ -177,6 +177,14 @@ def extract_teams():
     return teams_data
 
 def extract_a_team(team_id):
+    """Extracts data from the api for a specific team.
+
+    Args:
+        team_id (int): The official api id of team from the Sports Bzzoiro Data.
+
+    Returns:
+        dict: Team with id 'team_id' team info.
+    """
     
     path = f"/api/v2/teams/{team_id}"
     
@@ -190,8 +198,12 @@ def extract_a_team(team_id):
 '''
         MATCHES
 '''
-
 def extract_matches():
+    """Extracts all the matches from the revelant leagues and seasons from api.
+
+    Returns:
+        list[dict]: A list of all the matches with their info.
+    """
     
     # Getting seasons api ids according to Sports Bzzoiro Data API
     seasons_api_ids = get_seasons_api_ids()
@@ -231,8 +243,12 @@ def extract_matches():
 '''
         MATCH_STATS
 '''
-
 def extract_match_stats():
+    """Extracts all matches stats for the appropriate leagues and seasons
+
+    Returns:
+        list[dict]: List of all matches' statistics.
+    """
     
     match_ids = get_all_matches_finished_ids()
     
@@ -259,8 +275,12 @@ def extract_match_stats():
 '''
         PLAYER_SEASON_STATS
 '''
-
 def extract_player_season_stats():
+    """Extracts all available players from database season stats from the api.
+
+    Returns:
+        list[dict]: All players stats season by season.
+    """
     
     player_ids = get_all_player_ids()
     
@@ -282,8 +302,12 @@ def extract_player_season_stats():
 '''
         PLAYERS + ROSTERS
 '''
-
 def extract_rosters_and_players():
+    """Extracts the roster and player information per team in the database.
+
+    Returns:
+        tuple(list, list): The (roster, player) data from the api 
+    """
     
     team_ids = get_all_team_ids()
     
@@ -318,9 +342,12 @@ def extract_rosters_and_players():
 '''
         STANDINGS
 '''
-
 def extract_standings():
-    
+    """Extracts the Premie League standings from the latest 6 seasons.
+
+    Returns:
+        list[dict]: All the premier leagues standings from last six seasons.
+    """
     season_ids = get_seasons_api_ids()
     
     standings_data = []
@@ -336,67 +363,114 @@ def extract_standings():
     
     return standings_data
 
-
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-        UPDATE FUNCTIONS
+        UPDATE FUNCTIONS: Update functions to update information in the database.
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+'''
+        MATCHES
+'''
 
 def extract_match_updates(match_ids):
+    """Extracts the match info from all matches that have passed to be updated.
+
+    Args:
+        match_ids (list[int]): List of api ids of matches to have their information updated for the database.
+
+    Returns:
+        _type_: _description_
+    """
         
     raw_data = []
     n = len(match_ids)
+    
+    logger.info("Updating %d matches for the database.", n)
+    
     for i, match_id in enumerate(match_ids):
-        print(f"Fetching updated match info for matches {i+1}/{n}")
-        path = f"/api/v2/events/{match_id}"
         
+        logger.info("Fetching updated match info for matches %d/%d", i+1, n)
+        
+        path = f"/api/v2/events/{match_id}"
         response = fetch_api_data(path)
         
         raw_data.append(response)
+    
+    logger.info("Update extraction complete for %d matches.", n)
     
     return raw_data
 
 '''
         MATCH STATS
 '''
-
-
 def extract_match_stats_updates(match_ids):
+    """Extracts the match statistics of matches from database to be updated.
+
+    Args:
+        match_ids (list[int]): The list of match ids to have their match statistics updated
+
+    Returns:
+        _type_: _description_
+    """
     
-        
     raw_data = []
     n = len(match_ids)
-
-
+    
+    logger.info("Updating %d match stats for the database.", n)
+    
     for i, match_id in enumerate(match_ids):
-        print(f"Fetching updated match stats for matches {i+1}/{n}")
-        path = f"/api/v2/events/{match_id}/stats"
         
+        logger.info("Fetching updated match stats for matches %d/%d", i+1, n)
+        
+        path = f"/api/v2/events/{match_id}/stats"    
         response = fetch_api_data(path)
         
         raw_data.append(response)
     
+    logger.info("Finished extraction update for %d match stats.", n)
+    
     return raw_data
 
+'''
+        PLAYER_SEASON_STATS
+'''
 def extract_player_season_stats_updates():
+    """Extracts the current players season stats to be updated.
+
+    Returns:
+        list[dict]: List of all active player season stats.
+    """
     
     player_ids = get_all_active_player_ids()
-    
+  
     raw_data = []
     n = len(player_ids)
+    
+    logger.info("Updating %d players season stats for the database.", n)
 
     for i, player_id in enumerate(player_ids):
-        print(f"Fetching for updated player career stats for players {i+1}/{n}")
-        path = f"/api/v2/players/{player_id}/career/"
+        logger.info("Fetching for updated player career stats for players %d/%d.", i+1, n)
         
+        path = f"/api/v2/players/{player_id}/career/"    
         response = fetch_api_data(path)
         
         raw_data.append(response)
     
+    logger.info("Finished extraction for %d player season stats.", n)
+    
     return raw_data
 
+'''
+        STANDINGS
+'''
 def extract_standing_updates(season_id):
+    """Extracts an indicated Premier League season's league standings.
+
+    Args:
+        season_id (int): Official api id of the season's standings
+
+    Returns:
+        [dict]: A list containing the Premier League season's standings.
+    """
     
     path = f"/api/v2/leagues/{PREMIER_LEAGUE_ID}/standings/?season_id={season_id}"
 
     return [fetch_api_data(path)]
-

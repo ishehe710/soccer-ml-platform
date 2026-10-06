@@ -32,56 +32,64 @@ from src.pipeline.load import (
     load_players_season_stats,
     load_standings
 )
+from src.config.logger import create_logger
+
+logger = create_logger(__name__)
 
 def run():
-    print("Starting pipeline...")
     
-    '''
-            Extraction Transformation Load
-    '''
-    # Competitions
-    raw_competition_data = extract_competitions()
-    transformed_competition_data = transform_competitions(raw_competition_data)
-    load_competitions(transformed_competition_data)
+    try:
+        logger.info("Starting initialization pipeline...")
+        
+        '''
+                Extraction Transformation Load
+        '''
+        # Competitions
+        raw_competition_data = extract_competitions()
+        transformed_competition_data = transform_competitions(raw_competition_data)
+        load_competitions(transformed_competition_data)
+        
+        # Seasons
+        raw_season_data = extract_seasons()
+        transformed_season_data = transform_seasons(raw_season_data)
+        load_seasons(transformed_season_data)
+        
+        # Teams
+        raw_team_data = extract_teams()
+        transformed_team_data = transform_teams(raw_team_data)
+        load_teams(transformed_team_data)
+        
+        # Matches
+        raw_match_data = extract_matches()
+        transformed_match_data = transform_matches(raw_match_data)
+        load_matches(transformed_match_data)
+        
+        # Match stats
+        raw_match_stats_data = extract_match_stats()
+        transformed_match_stats_data = transform_all_match_stats(raw_match_stats_data)
+        load_all_match_stats(transformed_match_stats_data)
+        
+        # Rosters + Players
+        raw_roster_data, raw_player_data = extract_rosters_and_players()
+        transformed_player_data = transform_players(raw_player_data)
+        transformed_roster_data = transform_rosters(raw_roster_data)
+        load_players(transformed_player_data)
+        load_rosters(transformed_roster_data)
+        
+        # Player season stats
+        raw_player_season_stats_data = extract_player_season_stats()
+        transformed_player_season_stats_data = transform_all_player_season_stats(raw_player_season_stats_data)
+        load_players_season_stats(transformed_player_season_stats_data)
+        
+        # Standings
+        raw_standing_data = extract_standings()
+        transformed_standing_data = transform_standings(raw_standing_data)    
+        load_standings(transformed_standing_data)
     
-    # Seasons
-    raw_season_data = extract_seasons()
-    transformed_season_data = transform_seasons(raw_season_data)
-    load_seasons(transformed_season_data)
+        logger.info("Pipeline finished successfully.")
+    except Exception:
+        logger.info("Pipeline failed.")
+        raise
     
-    # Teams
-    raw_team_data = extract_teams()
-    transformed_team_data = transform_teams(raw_team_data)
-    load_teams(transformed_team_data)
-    
-    # Matches
-    raw_match_data = extract_matches()
-    transformed_match_data = transform_matches(raw_match_data)
-    load_matches(transformed_match_data)
-    
-    # Match stats
-    raw_match_stats_data = extract_match_stats()
-    transformed_match_stats_data = transform_all_match_stats(raw_match_stats_data)
-    load_all_match_stats(transformed_match_stats_data)
-    
-    # Rosters + Players
-    raw_roster_data, raw_player_data = extract_rosters_and_players()
-    transformed_player_data = transform_players(raw_player_data)
-    transformed_roster_data = transform_rosters(raw_roster_data)
-    load_players(transformed_player_data)
-    load_rosters(transformed_roster_data)
-    
-    # Player season stats
-    raw_player_season_stats_data = extract_player_season_stats()
-    transformed_player_season_stats_data = transform_all_player_season_stats(raw_player_season_stats_data)
-    load_players_season_stats(transformed_player_season_stats_data)
-    
-    # Standings
-    raw_standing_data = extract_standings()
-    transformed_standing_data = transform_standings(raw_standing_data)    
-    load_standings(transformed_standing_data)
-
-    print("Pipeline finished successfully.")
-
 if __name__ == "__main__":
     run()

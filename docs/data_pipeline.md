@@ -2,257 +2,117 @@
 
 ## Overview
 
-The data pipeline retrieves soccer data from the Bzzoiro Sports Data API, validates and transforms the data, and stores it in a PostgreSQL database.
+The application uses two data pipelines: an initialization pipeline and an incremental update pipeline. Both pipelines follow the ETL framework for data engineering.
 
-The pipeline is designed as a modular ETL process consisting of three primary stages:
+ETL stands for **Extract, Transform, and Load**. Extraction retrieves raw data from the Sports Bzzoiro Data API. Transformation selects the relevant data needed by the application and validates it to ensure it is ready to be stored in the database. Loading then inserts or upserts the transformed data into the PostgreSQL database.
 
-1. **Extraction** — retrieve raw data from the Bzzoiro Sports Data API.
-2. **Transformation** — validate and map the raw API data into application models using Pydantic.
-3. **Loading** — insert or update the transformed data in PostgreSQL.
+The initialization pipeline is responsible for initially populating the database with the data required by the application. The incremental update pipeline updates existing records with new data as it becomes available.
 
-The pipeline is implemented in `./src/pipeline/`.
-
-## Data Flow
+## Architecture
 
 ```text
-Bzzoiro Sports API
+Sports Bzzoiro API
         |
         v
     Extraction
-    extract.py
         |
         v
-  Validation /
   Transformation
-  transform.py
-        |
-        v
-      Loading
-       load.py
         |
         v
     PostgreSQL
-        |
-        v
-ML / Backend / Frontend
 ```
 
-The pipeline separates data extraction, transformation, and loading so that each stage can be tested and maintained independently.
+## Initial Data Pipeline
 
-## Data Sources
+The script responsible for the initial population of application data is `src/pipeline/run_initialization.py`.
 
-### Bzzoiro Sports Data API
+This pipeline populates the database with the necessary data for the latest six seasons of professional soccer for the competitions covered by the application.
 
-The primary data source for the project is the Bzzoiro Sports Data API.
+### Load Order
 
-The API provides soccer data used throughout the application, including competitions, seasons, teams, matches, match statistics, players, and player season statistics.
+1. Competitions
+2. Seasons
+3. Teams
+4. Matches
+5. Match Stats
+6. Players / Rosters
+7. Player Season Stats
+8. Standings
 
-**Provider:** Bzzoiro Sports Data
+Players and rosters are extracted and processed together because the roster data is used to determine which players need to be retrieved.
 
-**API documentation:** https://sports.bzzoiro.com/docs/conventions/
+## Incremental Update Pipeline
 
-**Authentication:** API requests require an authentication token supplied through the project's environment configuration.
+The script responsible for periodically updating database information is `src/pipeline/run_pipeline.py`.
 
-**Primary data used by the project:**
+This pipeline looks for records that need to be updated as the soccer season progresses. For example, match results, match statistics, player season statistics, and standings can change as matches are completed.
 
-* Competitions
-* Seasons
-* Teams
-* Matches
-* Match statistics
-* Players
-* Player season statistics
-* Standings
+### Updated Data
 
-The project initially focuses on the **Premier League** and **UEFA Champions League**. In the future more competitions will be covered.
+- Matches
+- Match stats
+- Player season stats
+- Standings
 
-API rate limits and authentication requirements are considered when designing the ingestion process.
+Teams, rosters, players, competitions, and seasons are not currently included in the incremental update pipeline because they are already populated and do not need to be updated as frequently during the season.
 
-## Extraction
+## Match Update Logic
 
-The extraction stage retrieves raw data from the Bzzoiro Sports Data API.
+When the incremental pipeline runs, it uses the current date as an inclusive cutoff to determine which matches are candidates for updates.
 
-Extraction is handled by:
+The database is queried for the API IDs of matches that meet the update criteria. These IDs are then passed to the match update functions in `src/pipeline/run_pipeline.py`.
 
-```text
-./src/pipeline/extract.py
-```
+The pipeline uses these IDs to retrieve the latest match information from the Sports Bzzoiro Data API. The updated data is transformed and then upserted into PostgreSQL. The same match IDs can also be used to retrieve updated match statistics.
 
-The extraction layer is responsible for:
+This prevents the pipeline from unnecessarily requesting every match in the database during each execution.
 
-* Building API request URLs
-* Supplying API authentication
-* Sending requests to the Bzzoiro Sports Data API
-* Retrieving raw API responses
-* Returning the raw data to the transformation stage
+## Idempotency
 
-The extraction layer does **not** perform database operations or application-level data modeling.
+The database uses a combination of SQL `UNIQUE` constraints and `UPSERT` operations to make the pipeline idempotent.
 
-The types of data extracted by the pipeline include:
-
-* Competitions
-* Seasons
-* Teams
-* Matches
-* Match statistics
-* Players
-* Player season statistics
-* Standings
-
-The database schema used to store this data is documented in the [Database Design Documentation](./database_design.md).
-
-## Transformation
-
-The transformation stage takes the raw API responses and converts them into validated application models.
-
-Transformation is handled by:
-
-```text
-./src/pipeline/transform.py
-```
-
-Pydantic models are used to validate the structure and types of the data before it is passed to the loading stage.
-
-The transformation process is responsible for:
-
-* Mapping API fields to database/application fields
-* Validating incoming data
-* Converting data into the appropriate types
-* Creating application models for the loading stage
-
-The transformation layer does not directly interact with PostgreSQL.
-
-Application models are stored in:
-
-```text
-./src/models/
-```
-
-## Loading
-
-The loading stage stores transformed data in the PostgreSQL database.
-
-Loading is handled by:
-
-```text
-./src/pipeline/load.py
-```
-
-The loading process is responsible for:
-
-* Connecting to PostgreSQL
-* Inserting transformed records
-* Updating existing records when appropriate
-* Preventing duplicate records
-* Maintaining relationships between database tables
-
-Database connection configuration is managed through the project's environment configuration.
-
-The database uses the PostgreSQL schema documented in the [Database Design Documentation](./database_design.md).
-
-## Pipeline Orchestration
-
-The individual extraction, transformation, and loading stages are coordinated by:
-
-```text
-./src/pipeline/run_pipeline.py
-```
-
-The pipeline follows the general pattern:
-
-```text
-Extract
-   |
-   v
-Transform
-   |
-   v
-Load
-```
-
-For each type of data, the pipeline executes the corresponding extraction, transformation, and loading functions.
-
-The pipeline is being implemented incrementally, beginning with competitions and expanding to the remaining database entities.
-
-## Update Strategy
-
-The pipeline must support both historical data ingestion and ongoing updates.
-
-Historical data is initially loaded into PostgreSQL to provide the data required for analytics and machine learning.
-
-For current competitions, the pipeline will periodically retrieve updated match information and update the database as matches are played.
-
-The intended update process is:
-
-```text
-Upcoming Matches
-       |
-       v
-Periodic API Update
-       |
-       v
-PostgreSQL
-       |
-       v
-Match Completed
-       |
-       v
-Update Match Data
-       |
-       v
-Update Statistics / Standings
-```
-
-The pipeline should use database upserts where appropriate so that running the pipeline multiple times does not create duplicate records.
+This allows existing records to be updated without creating duplicate records. As a result, the incremental pipeline can be executed repeatedly without duplicating previously loaded data.
 
 ## Error Handling
 
-The pipeline must account for errors that can occur during extraction, transformation, and loading.
+API requests use a Python `Session` configured with a retry strategy for temporary API failures. This helps prevent transient request failures from immediately terminating the pipeline.
 
-Potential errors include:
+The incremental pipeline in `src/pipeline/run_pipeline.py` also contains top-level exception handling. If an unrecoverable error occurs during one of the ETL stages, the error is logged and propagated rather than allowing the pipeline to silently report a successful execution.
 
-* API request failures
-* Authentication failures
-* API rate limiting
-* Missing or incomplete API data
-* Invalid data types or values
-* Pydantic validation errors
-* Database connection failures
-* Database constraint violations
-* Duplicate records
+## Logging
 
-Errors should be handled at the appropriate pipeline stage so that invalid data is not inserted into the database.
+The application uses Python's built-in `logging` module. Logging configuration is stored in `src/config/logger.py`, which provides the logging configuration used throughout the application.
+
+The pipeline logs important stages of ETL execution, including API extraction progress, transformation operations, the number of records being loaded, and pipeline completion or failure.
+
+These logs make it easier to monitor pipeline executions and diagnose failures, especially when the pipeline is automated in the future.
+
+## Running the Pipeline
+
+The initialization pipeline can be run with:
+
+```bash
+python src/pipeline/run_initialization.py
+```
+
+The incremental update pipeline can be run with:
+
+```bash
+python src/pipeline/run_pipeline.py
+```
+
+## Automation
+
+The incremental pipeline is currently executed manually. A future step is to use GitHub Actions to schedule executions of `run_pipeline.py` so that the database can automatically update as new matches are completed and new data becomes available.
 
 ## Testing
 
-Pipeline and application tests are located in:
+The following tests have been performed on the data pipeline:
 
-```text
-./tests/
-```
+- Successful initialization of the PostgreSQL database
+- Repeated execution of the incremental pipeline
+- Verification that repeated executions do not create duplicate records
+- Verification that real-world data changes are reflected in PostgreSQL
+- Successful execution with application logging enabled
 
-Testing will cover individual pipeline stages as well as the interaction between stages.
-
-Examples include:
-
-* Testing API extraction
-* Testing data transformation
-* Testing Pydantic validation
-* Testing database loading
-* Testing duplicate/upsert behavior
-* Testing database relationships
-* Testing the complete pipeline
-
-## Future Improvements
-
-Potential improvements to the data pipeline include:
-
-* Scheduled ingestion
-* Automated database updates
-* Improved error logging
-* Pipeline monitoring
-* Retry mechanisms for failed API requests
-* More leagues and competitions
-* More comprehensive data validation
-* Incremental data ingestion
-* Automated pipeline execution through CI/CD
+A final live-match validation will be performed when new Premier League or Champions League matches are available. This will verify the complete update flow as a match progresses from its existing fixture state to a completed match with updated statistics.

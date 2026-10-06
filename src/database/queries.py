@@ -3,6 +3,9 @@ from datetime import datetime
 # in-project imports
 from src.database.connect_db import get_connection
 from src.config.pipeline import PREMIER_LEAGUE_ID
+from src.config.logger import create_logger
+
+logger = create_logger(__name__)
 
 '''
         COMPETITIONS
@@ -35,7 +38,7 @@ def get_seasons_api_ids():
             for id in cur:
                 seasons_api_ids.append(id[0])
             
-            print("Successfully got seasons api_ids from database.")
+            logger.info("Successfully got seasons api_ids from database.")
             return seasons_api_ids
 
 def get_current_season_ids():
@@ -152,7 +155,6 @@ def get_match_ids_with_no_stats():
     with get_connection() as conn:
         with conn.cursor() as cur:
             
-
             cur.execute("SELECT match_id FROM match_stats WHERE match_id = ANY(%s);", (match_ids,))
         
             # Fetch all matching records
