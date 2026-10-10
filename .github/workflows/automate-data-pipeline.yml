@@ -34,8 +34,7 @@ jobs:
       - name: Update database
         env:
           SPORTS_BZZOIRO_API_KEY: ${{ secrets.SPORTS_BZZOIRO_API_KEY }}
-          SPORTS_BZZOIRO_API_URL: ${{ vars.SPORTS_BZZOIRO_API_URL }}
-
+          SPORTS_BZZOIRO_API_URL: ${{ secrets.SPORTS_BZZOIRO_API_URL }}
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_PORT: ${{ secrets.DB_PORT }}
           DB_NAME: ${{ secrets.DB_NAME }}
