@@ -34,9 +34,12 @@ jobs:
       - name: Update database
         env:
           SPORTS_BZZOIRO_API_KEY: ${{ secrets.SPORTS_BZZOIRO_API_KEY }}
+          SPORTS_BZZOIRO_API_URL: ${{ vars.SPORTS_BZZOIRO_API_URL }}
+
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_PORT: ${{ secrets.DB_PORT }}
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+
         run: python -m src.pipeline.run_pipeline
