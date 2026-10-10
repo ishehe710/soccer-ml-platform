@@ -11,6 +11,12 @@ on:
       timezone: "America/Phoenix"
     - cron: '45 11 * * SAT'
       timezone: "America/Phoenix"
+    - cron: '15 8 * * SUN'
+      timezone: "America/Phoenix"
+    - cron: '45 11 * * SUN'
+      timezone: "America/Phoenix"
+    - cron: '15 2 * * MON'
+      timezone: "America/Phoenix"
 
   workflow_dispatch:
 
