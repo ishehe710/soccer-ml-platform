@@ -17,6 +17,7 @@ on:
 jobs:
   schedule_update:
     runs-on: [self-hosted, Windows, X64]
+    environment: production
 
     steps:
       - name: Checkout repository
