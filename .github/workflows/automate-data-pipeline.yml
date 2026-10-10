@@ -31,6 +31,17 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Debug GitHub Secrets
+        shell: pwsh
+        env:
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          Write-Host "DB_PORT exists: $(-not [string]::IsNullOrWhiteSpace($env:DB_PORT))"
+          Write-Host "DB_HOST exists: $(-not [string]::IsNullOrWhiteSpace($env:DB_HOST))"
+          Write-Host "DB_PASSWORD exists: $(-not [string]::IsNullOrWhiteSpace($env:DB_PASSWORD))"
+
       - name: Update database
         env:
           SPORTS_BZZOIRO_API_KEY: ${{ secrets.SPORTS_BZZOIRO_API_KEY }}
