@@ -1,0 +1,42 @@
+
+name: Data Pipeline Scheduler
+run-name: Soccer Data Update
+
+on:
+  schedule:
+    # Premier League — Phoenix time
+    - cron: '45 6 * * SAT'
+      timezone: "America/Phoenix"
+    - cron: '15 9 * * SAT'
+      timezone: "America/Phoenix"
+    - cron: '45 11 * * SAT'
+      timezone: "America/Phoenix"
+
+  workflow_dispatch:
+
+jobs:
+  schedule_update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Update database
+        env:
+          SPORTS_BZZOIRO_API_KEY: ${{ secrets.SPORTS_BZZOIRO_API_KEY }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: python -m src.pipeline.run_pipeline
